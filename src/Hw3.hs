@@ -42,8 +42,8 @@ foldLeft = foldl'
 sqSum :: [Int] -> Int
 sqSum xs = foldLeft f base xs
   where
-   f a x = error "TBD: sqSum f"
-   base  = error "TBD: sqSum base"
+   f a x = a + x * x
+   base  = 0
 
 --------------------------------------------------------------------------------
 -- | `pipe [f1,...,fn] x` should return `f1(f2(...(fn x)))`
@@ -60,8 +60,8 @@ sqSum xs = foldLeft f base xs
 pipe :: [(a -> a)] -> (a -> a)
 pipe fs   = foldLeft f base fs
   where
-    f a x = error "TBD: pipe: f"
-    base  = error "TBD: pipe: base"
+    f a x = a . x
+    base  = id
 
 --------------------------------------------------------------------------------
 -- | `sepConcat sep [s1,...,sn]` returns `s1 ++ sep ++ s2 ++ ... ++ sep ++ sn`
@@ -79,9 +79,9 @@ sepConcat :: String -> [String] -> String
 sepConcat sep []     = ""
 sepConcat sep (x:xs) = foldLeft f base l
   where
-    f a x            = error "TBD:sepConcat:f"
-    base             = error "TBD:sepConcat:base"
-    l                = error "TBD:l"
+    f a x            = a ++ sep ++ x
+    base             = x
+    l                = xs
 
 intString :: Int -> String
 intString = show
