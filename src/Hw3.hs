@@ -109,7 +109,8 @@ stringOfList f xs = "[" ++ sepConcat ", " (map f xs) ++ "]"
 -- >>> clone "foo" 2
 -- ["foo", "foo"]
 clone :: a -> Int -> [a]
-clone x n = [x | _ <- [1 .. n]]
+clone _ 0 = []
+clone x n = [x] ++ clone x (n - 1)
 
 type BigInt = [Int]
 
@@ -159,13 +160,22 @@ removeZero ds = foldLeft f base ds
 -- >>> bigAdd [9, 9, 9, 9] [9, 9, 9]
 -- [1, 0, 9, 9, 8]
 bigAdd :: BigInt -> BigInt -> BigInt
-bigAdd l1 l2 = removeZero res
+bigAdd l1 l2 = removeZero (removeCarry res)
   where
     (l1', l2') = padZero l1 l2
     res = foldLeft f base args
-    f a x = error "TBD:bigAdd:f"
-    base = error "TBD:bigAdd:base"
-    args = error "TBD:bigAdd:args"
+    f a x = sum a x
+      where
+        sum (carry, array) (l1'', l2'') = (newCarry, newNum : array) -- return type (Int, [Int])
+          where
+            tempSum = l1'' + l2'' + carry
+            newCarry = tempSum `div` 10
+            newNum = tempSum `mod` 10
+    removeCarry (carry, array) = newArray
+      where
+        newArray = if carry > 0 then carry : array else array
+    base = (0, [])
+    args = reverse (zip l1' l2')
 
 --------------------------------------------------------------------------------
 
@@ -175,7 +185,11 @@ bigAdd l1 l2 = removeZero res
 -- >>> mulByInt 9 [9,9,9,9]
 -- [8,9,9,9,1]
 mulByInt :: Int -> BigInt -> BigInt
-mulByInt i n = error "TBD:mulByInt"
+mulByInt i n = foldLeft f base arg
+  where
+    arg = clone n i
+    base = [0]
+    f a x = bigAdd a x
 
 --------------------------------------------------------------------------------
 
@@ -190,6 +204,12 @@ bigMul :: BigInt -> BigInt -> BigInt
 bigMul l1 l2 = res
   where
     (_, res) = foldLeft f base args
-    f a x = error "TBD:bigMul:f"
-    base = error "TBD:bigMul:base"
-    args = error "TBD:bigMul:args"
+    f a x = step a x
+      where
+        step (index, sum) x = (index + 1, bigAdd currentSum sum)
+          where
+            currentSum = mulByInt x' l2
+              where
+                x' = if index > 0 then (x * (10 ^ index)) else x
+    base = (0, [])
+    args = reverse l1
